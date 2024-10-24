@@ -1,0 +1,10 @@
+displayName: Docker - Multiple Traefik
+type: provider
+iconPath: .assets/icon.png
+
+import: github.com/leandrormd/docker-multiple-traefik
+
+summary: 'Docker - Multiple Traefik'
+
+testData:
+  pollInterval: 5s
