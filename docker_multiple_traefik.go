@@ -1,60 +1,48 @@
-// Package dockermultipletraefik contains a demo of the provider's plugin.
 package dockermultipletraefik
 
 import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
-	"time"
-
 	"github.com/traefik/genconf/dynamic"
 	"github.com/traefik/genconf/dynamic/tls"
+	"log"
+	"strings"
 )
 
-// Config the plugin configuration.
 type Config struct {
-	PollInterval string `json:"pollInterval,omitempty"`
+	LabelPrefix string `json:"labelPrefix,omitempty"`
 }
 
-// CreateConfig creates the default plugin configuration.
 func CreateConfig() *Config {
 	return &Config{
-		PollInterval: "5s", // 5 * time.Second
+		LabelPrefix: "", // 5 * time.Second
 	}
 }
 
-// Provider a simple provider plugin.
 type Provider struct {
-	name         string
-	pollInterval time.Duration
+	name        string
+	labelPrefix string
 
 	cancel func()
 }
 
-// New creates a new Provider plugin.
 func New(ctx context.Context, config *Config, name string) (*Provider, error) {
-	pi, err := time.ParseDuration(config.PollInterval)
-	if err != nil {
-		return nil, err
-	}
 
 	return &Provider{
-		name:         name,
-		pollInterval: pi,
+		name:        name,
+		labelPrefix: config.LabelPrefix,
 	}, nil
 }
 
-// Init the provider.
 func (p *Provider) Init() error {
-	if p.pollInterval <= 0 {
-		return fmt.Errorf("poll interval must be greater than 0")
+	if strings.TrimSpace(p.labelPrefix) == "" {
+		return fmt.Errorf("Label Prefix cannot be null or empty")
 	}
 
 	return nil
 }
 
-// Provide creates and send dynamic configuration.
 func (p *Provider) Provide(cfgChan chan<- json.Marshaler) error {
 	ctx, cancel := context.WithCancel(context.Background())
 	p.cancel = cancel
@@ -73,36 +61,19 @@ func (p *Provider) Provide(cfgChan chan<- json.Marshaler) error {
 }
 
 func (p *Provider) loadConfiguration(ctx context.Context, cfgChan chan<- json.Marshaler) {
-	ticker := time.NewTicker(p.pollInterval)
-	defer ticker.Stop()
 
-	for {
-		select {
-		case t := <-ticker.C:
-			configuration := generateConfiguration(t)
+	dynamicConfiguration := generateConfiguration()
 
-			cfgChan <- &dynamic.JSONPayload{Configuration: configuration}
+	cfgChan <- &dynamic.JSONPayload{Configuration: dynamicConfiguration}
 
-		case <-ctx.Done():
-			return
-		}
-	}
 }
 
-// Stop to stop the provider and the related go routines.
 func (p *Provider) Stop() error {
 	p.cancel()
 	return nil
 }
 
-type CustomConfiguration struct {
-	HTTP *dynamic.HTTPConfiguration `json:"custom.http,omitempty"`
-	TCP  *dynamic.TCPConfiguration  `json:"tcp,omitempty"`
-	UDP  *dynamic.UDPConfiguration  `json:"udp,omitempty"`
-	TLS  *dynamic.TLSConfiguration  `json:"tls,omitempty"`
-}
-
-func generateConfiguration(date time.Time) *dynamic.Configuration {
+func generateConfiguration() *dynamic.Configuration {
 	configuration := &dynamic.Configuration{
 		HTTP: &dynamic.HTTPConfiguration{
 			Routers:           make(map[string]*dynamic.Router),
@@ -122,42 +93,6 @@ func generateConfiguration(date time.Time) *dynamic.Configuration {
 			Routers:  make(map[string]*dynamic.UDPRouter),
 			Services: make(map[string]*dynamic.UDPService),
 		},
-	}
-
-	configuration.HTTP.Routers["pp-route-01"] = &dynamic.Router{
-		EntryPoints: []string{"web"},
-		Service:     "pp-service-01",
-		Rule:        "Host(`example.com`)",
-	}
-
-	configuration.HTTP.Services["pp-service-01"] = &dynamic.Service{
-		LoadBalancer: &dynamic.ServersLoadBalancer{
-			Servers: []dynamic.Server{
-				{
-					URL: "http://localhost:9090",
-				},
-			},
-			PassHostHeader: boolPtr(true),
-		},
-	}
-
-	if date.Minute()%2 == 0 {
-		configuration.HTTP.Routers["pp-route-02"] = &dynamic.Router{
-			EntryPoints: []string{"web"},
-			Service:     "pp-service-02",
-			Rule:        "Host(`another.example.com`)",
-		}
-
-		configuration.HTTP.Services["pp-service-02"] = &dynamic.Service{
-			LoadBalancer: &dynamic.ServersLoadBalancer{
-				Servers: []dynamic.Server{
-					{
-						URL: "http://localhost:9091",
-					},
-				},
-				PassHostHeader: boolPtr(true),
-			},
-		}
 	}
 
 	return configuration
