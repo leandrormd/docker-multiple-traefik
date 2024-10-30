@@ -1,4 +1,4 @@
-package dockermultipletraefik_test
+package dockerMultipleTraefik_test
 
 import (
 	"bytes"
@@ -13,10 +13,10 @@ import (
 )
 
 func TestNew(t *testing.T) {
-	config := dockermultipletraefik.CreateConfig()
+	config := dockerMultipleTraefik.CreateConfig()
 	config.PollInterval = "1s"
 
-	provider, err := dockermultipletraefik.New(context.Background(), config, "test")
+	provider, err := dockerMultipleTraefik.New(context.Background(), config, "test")
 	if err != nil {
 		t.Fatal(err)
 	}

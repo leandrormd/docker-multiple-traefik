@@ -1,4 +1,4 @@
-module github.com/leandrormd/docker-multiple-traefik
+module github.com/leandrormd/dockerMultipleTraefik
 
 go 1.19
 

@@ -1,4 +1,4 @@
-package dockermultipletraefik
+package dockerMultipleTraefik
 
 import (
 	"context"

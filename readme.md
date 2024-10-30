@@ -16,7 +16,7 @@ The following declaration (given here in YAML) defines a plugin:
 experimental:
   plugins:
     example:
-      moduleName: github.com/leandrormd/docker-multiple-traefik
+      moduleName: github.com/leandrormd/dockerMultipleTraefik
       version: v0.1.0
 
 providers:
