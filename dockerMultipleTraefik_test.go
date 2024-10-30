@@ -7,14 +7,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/leandrormd/docker-multiple-traefik"
+	"github.com/leandrormd/dockerMultipleTraefik"
 	"github.com/traefik/genconf/dynamic"
 	"github.com/traefik/genconf/dynamic/tls"
 )
 
 func TestNew(t *testing.T) {
 	config := dockerMultipleTraefik.CreateConfig()
-	config.PollInterval = "1s"
+	config.LabelPrefix = "docker.multiple.traefik.test."
 
 	provider, err := dockerMultipleTraefik.New(context.Background(), config, "test")
 	if err != nil {

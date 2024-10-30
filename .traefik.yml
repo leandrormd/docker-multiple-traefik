@@ -7,4 +7,4 @@ import: github.com/leandrormd/dockerMultipleTraefik
 summary: 'Docker - Multiple Traefik'
 
 testData:
-  pollInterval: 5s
+  labelPrefix: 'docker.multiple.traefik.test.'
